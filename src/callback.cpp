@@ -1,7 +1,9 @@
 #include <iostream>
 #include <callback.h>
 #include <algorithm>
+#include <filesystem>
 
+namespace fs = std::filesystem;
 
 std::string FileStream::save_text_filename;
 std::ofstream FileStream::save_text_output_stream;
@@ -11,24 +13,41 @@ std::ifstream FileStream::copy_text_input_stream;
 
 void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
 {
-    FileStream::save_text_output_stream.open( savetextFile, std::ios_base::app | std::ios_base::out );
-    FileStream::save_text_input_stream.open( savetextFile, std::ios_base::in );
-
-    FileStream::copy_text_input_stream.open( copytextFile, std::ios_base::in );
-    FileStream::save_text_filename = savetextFile;
-
-    if ( !FileStream::save_text_output_stream.is_open() || !FileStream::save_text_input_stream.is_open()) 
-    {
-        std::cout << "Savefile path : " << savetextFile << '\n';
-        return;
+    if ( !checkExistenceAndCreate( savetextFile ) ) {
+        std::cout << "SaveFile created : " << savetextFile << '\n';
     }
-    if ( !FileStream::copy_text_input_stream.is_open() )
-    {
-        std::cout << "Copyfile path : " << copytextFile << '\n';
-        return;
+
+    if ( !checkExistenceAndCreate( copytextFile ) ) {
+        std::cout << "Copyfile created : " << copytextFile << '\n';
     }
-    std::cout << "File loaded : " << FileStream::save_text_filename << '\n';
+    
+    save_text_output_stream.open( savetextFile, std::ios_base::app | std::ios_base::out );
+    save_text_input_stream.open( savetextFile, std::ios_base::in );
+
+    copy_text_input_stream.open( copytextFile, std::ios_base::in );
+    save_text_filename = savetextFile;
+
+    if ( save_text_input_stream.is_open() && save_text_output_stream.is_open() && copy_text_input_stream.is_open() ) 
+    {
+        std::cout << "FileStreams successfully loaded : " << savetextFile << " | " << copytextFile << '\n';
+    }
 }
+
+bool FileStream::checkExistenceAndCreate( const char *filepath )
+{
+    fs::path file{ filepath };
+    if ( !fs::exists( file ) ) 
+    {
+        std::cout << "Creating file : " << filepath << '\n';
+        if ( !fs::exists( file.parent_path() ) ) {
+            fs::create_directory( file.parent_path() );
+        }
+        std::ofstream ofs{ filepath };
+        return false;
+    }
+    return true;
+}
+
 
 std::string FileStream::getClipText()
 {
@@ -56,10 +75,10 @@ std::string FileStream::getClipText()
 
 void FileStream::saveText( std::string &text )
 {
-    FileStream::save_text_input_stream.seekg( -1, std::ios_base::end );
+    save_text_input_stream.seekg( -1, std::ios_base::end );
 
-    if ( FileStream::save_text_input_stream.get() != '\n' ) {
-        FileStream::save_text_output_stream << '\n';
+    if ( save_text_input_stream.get() != '\n' && !fs::is_empty( fs::path( save_text_filename ) ) ) {
+        save_text_output_stream << '\n';
     }
 
     auto search = std::find( text.begin(), text.end(), '\r' );
@@ -70,8 +89,8 @@ void FileStream::saveText( std::string &text )
     }
 
     if ( !text.empty() ) {
-        FileStream::save_text_output_stream << text;
-        FileStream::save_text_output_stream.flush();
+        save_text_output_stream << text;
+        save_text_output_stream.flush();
     }
 }
 
@@ -100,18 +119,17 @@ void FileStream::pasteTextClip( std::string &text )
     CloseClipboard();
 }
 
-
 void FileStream::cyclePaste()
 {
     std::string text;
-    std::getline( FileStream::copy_text_input_stream, text );
+    std::getline( copy_text_input_stream, text );
 
-    if ( FileStream::copy_text_input_stream.tellg() == -1 ) 
+    if ( copy_text_input_stream.tellg() == -1 ) 
     {
-        FileStream::copy_text_input_stream.clear();
-        FileStream::copy_text_input_stream.seekg( 0 );
+        copy_text_input_stream.clear();
+        copy_text_input_stream.seekg( 0 );
     }
-    FileStream::pasteTextClip( text += '\n' );
+    pasteTextClip( text += '\n' );
 }
 
 void postSaveMessage()
