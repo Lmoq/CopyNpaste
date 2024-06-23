@@ -12,7 +12,7 @@ std::ifstream FileStream::copy_text_input_stream;
 void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
 {
     FileStream::save_text_output_stream.open( savetextFile, std::ios_base::app | std::ios_base::out );
-    FileStream:save_text_input_stream.open( savetextFile, std::ios_base::ate | std::ios_base::in );
+    FileStream::save_text_input_stream.open( savetextFile, std::ios_base::in );
 
     FileStream::copy_text_input_stream.open( copytextFile, std::ios_base::in );
     FileStream::save_text_filename = savetextFile;
@@ -43,12 +43,10 @@ std::string FileStream::getClipText()
         std::cout << "Clipboard failed\n";
         return text;
     }
-
     hglbMem = GetClipboardData( CF_TEXT );
-    if ( hglbMem != NULL )
-    {
-        const char *retrived = static_cast<char *>( GlobalLock( hglbMem ) );
-        text = retrived;
+
+    if ( hglbMem != NULL ) {
+        text = static_cast<char *>( GlobalLock( hglbMem ) );
         GlobalUnlock( hglbMem );
     }
 
@@ -58,7 +56,7 @@ std::string FileStream::getClipText()
 
 void FileStream::saveText( std::string &text )
 {
-    FileStream::save_text_input_stream.seekg( -1, std::ios_base::cur );
+    FileStream::save_text_input_stream.seekg( -1, std::ios_base::end );
 
     if ( FileStream::save_text_input_stream.get() != '\n' ) {
         FileStream::save_text_output_stream << '\n';

@@ -12,7 +12,6 @@ void INIT_HOTKEY( Hotkey &HotKey )
     HotKey.addhotkey( { VK_LCONTROL,   0x56 }, &FileStream::cyclePaste );
 }
 
-
 void Hotkey::addhotkey( std::unordered_set<DWORD> vkCodes, void ( *callback )() )
 {
     hotkey hkey;
@@ -34,9 +33,7 @@ unsigned int Hotkey::hashKeys( std::unordered_set<DWORD> vkCodes )
 bool Hotkey::keyExists( std::unordered_set<DWORD> vkCodes, unsigned int &hashed_value )
 {
     hashed_value = hashKeys( vkCodes );
-    auto search = hotkeyMap.find( hashed_value );
-
-    if ( search != hotkeyMap.end() ) {
+    if ( hotkeyMap.find( hashed_value ) != hotkeyMap.end() ) {
         return true;
     }
     return false;
