@@ -7,7 +7,7 @@
 
 void INIT_HOTKEY( Hotkey &HotKey )
 {
-    HotKey.addhotkey( { VK_OEM_PERIOD, 0x31 }, &terminate );
+    HotKey.addhotkey( { VK_OEM_PERIOD, 0x31 }, &terminate ); // Press ". + 1" to terminate program
     HotKey.addhotkey( { VK_LCONTROL,   0x43 }, &postSaveMessage );
     HotKey.addhotkey( { VK_LCONTROL,   0x56 }, &FileStream::cyclePaste );
 }
