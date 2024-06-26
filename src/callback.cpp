@@ -29,7 +29,7 @@ void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
 
     if ( save_text_input_stream.is_open() && save_text_output_stream.is_open() && copy_text_input_stream.is_open() ) 
     {
-        std::cout << "FileStreams successfully loaded : " << savetextFile << " | " << copytextFile << '\n';
+        std::cout << "Input and output filestreams successfully loaded : " << savetextFile << " | " << copytextFile << '\n';
     }
 }
 

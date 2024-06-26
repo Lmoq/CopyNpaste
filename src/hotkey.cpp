@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <hotkey.h>
 #include <callback.h>
+#include <utils.h>
 
 
 void INIT_HOTKEY( Hotkey &HotKey )
@@ -21,11 +22,11 @@ void Hotkey::addhotkey( std::unordered_set<DWORD> vkCodes, void ( *callback )() 
     hotkeyMap[ hashKeys( vkCodes ) ] = hkey;
 }
 
-unsigned int Hotkey::hashKeys( std::unordered_set<DWORD> vkCodes )
+DWORD Hotkey::hashKeys( std::unordered_set<DWORD> vkCodes )
 {
-    unsigned int hashed_value = 0;
+    DWORD hashed_value = 0;
     for ( auto item : vkCodes ) {
-        hashed_value += item ^ sample_prime;
+        hashed_value += static_cast<DWORD>( ( power( item, item ) ^ sample_prime ) / item );
     }
     return hashed_value % 1999;
 }

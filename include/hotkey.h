@@ -21,7 +21,7 @@ public:
     unsigned int sample_prime = 16777619;
 
     void addhotkey( std::unordered_set<DWORD> vkCodes, void ( *callback )() );
-    unsigned int hashKeys( std::unordered_set<DWORD> vkCodes );
+    DWORD hashKeys( std::unordered_set<DWORD> vkCodes );
     bool keyExists( std::unordered_set<DWORD> vkCodes, unsigned int &hashed_value );
     
     void keydown( DWORD vkCode );

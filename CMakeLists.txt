@@ -10,7 +10,8 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}.. )
 set( SOURCES
         "src/main.cpp"
         "src/hotkey.cpp"
-        "src/callback.cpp" )
+        "src/callback.cpp"
+        "src/utils.cpp" )
 
 project( copynpaste )
 add_executable( ${PROJECT_NAME} ${SOURCES} )
