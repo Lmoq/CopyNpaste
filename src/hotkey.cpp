@@ -26,12 +26,12 @@ DWORD Hotkey::hashKeys( std::unordered_set<DWORD> vkCodes )
 {
     DWORD hashed_value = 0;
     for ( auto item : vkCodes ) {
-        hashed_value += static_cast<DWORD>( ( power( item, item ) ^ sample_prime ) / item );
+        hashed_value += static_cast<DWORD>( ( power( item, 4 ) ^ sample_prime ) / item );
     }
     return hashed_value % 1999;
 }
 
-bool Hotkey::keyExists( std::unordered_set<DWORD> vkCodes, unsigned int &hashed_value )
+bool Hotkey::keyExists( std::unordered_set<DWORD> vkCodes, DWORD &hashed_value )
 {
     hashed_value = hashKeys( vkCodes );
     if ( hotkeyMap.find( hashed_value ) != hotkeyMap.end() ) {
@@ -42,7 +42,7 @@ bool Hotkey::keyExists( std::unordered_set<DWORD> vkCodes, unsigned int &hashed_
 
 void Hotkey::keydown( DWORD vkCode )
 {
-    unsigned int hashed_value;
+    DWORD hashed_value;
     recorded_keys.insert( vkCode );
 
     if ( !keyExists( recorded_keys, hashed_value ) ) {

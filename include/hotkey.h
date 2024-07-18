@@ -15,14 +15,14 @@ public:
     } hotkey;
     hotkey *active_hotkey = NULL;
 
-    std::unordered_map<unsigned int, hotkey> hotkeyMap;
+    std::unordered_map<DWORD, hotkey> hotkeyMap;
     std::unordered_set<DWORD> recorded_keys;
 
     unsigned int sample_prime = 16777619;
 
     void addhotkey( std::unordered_set<DWORD> vkCodes, void ( *callback )() );
     DWORD hashKeys( std::unordered_set<DWORD> vkCodes );
-    bool keyExists( std::unordered_set<DWORD> vkCodes, unsigned int &hashed_value );
+    bool keyExists( std::unordered_set<DWORD> vkCodes, DWORD &hashed_value );
     
     void keydown( DWORD vkCode );
     void keyup( DWORD vkCode );

@@ -23,12 +23,12 @@ void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
     }
     
     save_text_output_stream.open( savetextFile, std::ios_base::app | std::ios_base::out );
-    save_text_input_stream.open( savetextFile, std::ios_base::in );
-
+    save_text_input_stream.open( save_text_filename, std::ios_base::in );
+    
     copy_text_input_stream.open( copytextFile, std::ios_base::in );
     save_text_filename = savetextFile;
 
-    if ( save_text_input_stream.is_open() && save_text_output_stream.is_open() && copy_text_input_stream.is_open() ) 
+    if ( save_text_output_stream.is_open() && copy_text_input_stream.is_open() ) 
     {
         std::cout << "Input and output filestreams successfully loaded : " << savetextFile << " | " << copytextFile << '\n';
     }
@@ -49,19 +49,23 @@ bool FileStream::checkExistenceAndCreate( const char *filepath )
     return true;
 }
 
-
 std::string FileStream::getClipText()
 {
     HGLOBAL hglbMem;
     std::string text = "";
+    UINT8 retries = 0;
 
     if ( !IsClipboardFormatAvailable( CF_TEXT ) ) {
         std::cout << "No text available\n";
         return text;
     }
-    if ( !OpenClipboard( NULL ) ) {
-        std::cout << "Clipboard failed\n";
-        return text;
+
+    while ( !OpenClipboard( NULL ) ) {
+        retries ++;
+        if ( retries > 49 ) {
+            std::cout << "OpenCliboard failed\n";
+            return text;
+        }
     }
     hglbMem = GetClipboardData( CF_TEXT );
 
@@ -77,10 +81,20 @@ std::string FileStream::getClipText()
 void FileStream::saveText( std::string &text )
 {
     save_text_input_stream.seekg( -1, std::ios_base::end );
+    // std::cout << "tellg : " << save_text_input_stream.tellg() << '\n';
 
-    if ( save_text_input_stream.get() != '\n' && !fs::is_empty( fs::path( save_text_filename ) ) ) {
+    char c = save_text_input_stream.get();
+    
+    std::cout << "Last char : " << c << "  | is_newline : " << std::boolalpha << ( c == '\n' ) << '\n';
+    std::cout << "File empty : " << std::boolalpha << ( fs::is_empty( fs::path( save_text_filename ) ) ) << '\n';
+    
+    if ( c != '\n' )
+    {
+        std::cout << "newline appended\n";
         save_text_output_stream << '\n';
     }
+    save_text_input_stream.clear();
+
 
     auto search = std::find( text.begin(), text.end(), '\r' );
     while ( search != text.end() )
@@ -98,16 +112,21 @@ void FileStream::saveText( std::string &text )
 void FileStream::pasteTextClip( std::string &text )
 {
     HGLOBAL hglbMem;
+    UINT8 retries = 0;
 
-    if ( !OpenClipboard( NULL ) ) {
-        std::cout << "Clipboard failed to open\n";
-        return;
+    while ( !OpenClipboard( NULL ) ) {
+        retries ++;
+        if ( retries > 49 )
+        {
+            std::cout << "Clipboard failed to open\n";
+            return;
+        }
     }
     EmptyClipboard();
 
     hglbMem = GlobalAlloc( GMEM_MOVEABLE, text.length() + 1 );
-    if ( hglbMem != NULL ) 
-    {    
+    if ( hglbMem != NULL )
+    {
         char *text_ = static_cast<char *>( GlobalLock( hglbMem ) );
         memcpy( text_, text.c_str(), text.length() + 1 );
 
@@ -117,6 +136,7 @@ void FileStream::pasteTextClip( std::string &text )
         SetClipboardData( CF_TEXT, hglbMem );
         GlobalFree( hglbMem );
     }
+    
     CloseClipboard();
 }
 
@@ -130,7 +150,7 @@ void FileStream::cyclePaste()
         copy_text_input_stream.clear();
         copy_text_input_stream.seekg( 0 );
     }
-    pasteTextClip( text += '\n' );
+    pasteTextClip( text );
 }
 
 void postSaveMessage()
