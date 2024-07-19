@@ -23,9 +23,9 @@ void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
     }
     
     save_text_output_stream.open( savetextFile, std::ios_base::app | std::ios_base::out );
-    save_text_input_stream.open( save_text_filename, std::ios_base::in );
-    
+    save_text_input_stream.open( savetextFile, std::ios_base::in );
     copy_text_input_stream.open( copytextFile, std::ios_base::in );
+    
     save_text_filename = savetextFile;
 
     if ( save_text_output_stream.is_open() && copy_text_input_stream.is_open() ) 
@@ -40,7 +40,8 @@ bool FileStream::checkExistenceAndCreate( const char *filepath )
     if ( !fs::exists( file ) ) 
     {
         std::cout << "Creating file : " << filepath << '\n';
-        if ( !fs::exists( file.parent_path() ) ) {
+        if ( !fs::exists( file.parent_path() ) ) 
+        {
             fs::create_directory( file.parent_path() );
         }
         std::ofstream ofs{ filepath };
@@ -81,21 +82,12 @@ std::string FileStream::getClipText()
 void FileStream::saveText( std::string &text )
 {
     save_text_input_stream.seekg( -1, std::ios_base::end );
-    // std::cout << "tellg : " << save_text_input_stream.tellg() << '\n';
-
-    char c = save_text_input_stream.get();
-    
-    std::cout << "Last char : " << c << "  | is_newline : " << std::boolalpha << ( c == '\n' ) << '\n';
-    std::cout << "File empty : " << std::boolalpha << ( fs::is_empty( fs::path( save_text_filename ) ) ) << '\n';
-    
-    if ( c != '\n' )
+    if ( save_text_input_stream.get() != '\n' && save_text_input_stream.tellg() != -1 )
     {
-        std::cout << "newline appended\n";
         save_text_output_stream << '\n';
     }
-    save_text_input_stream.clear();
 
-
+    // Remove all '\r' as it get converted to '\n'
     auto search = std::find( text.begin(), text.end(), '\r' );
     while ( search != text.end() )
     {
@@ -107,6 +99,8 @@ void FileStream::saveText( std::string &text )
         save_text_output_stream << text;
         save_text_output_stream.flush();
     }
+    // Clear state in order to continue io operations
+    save_text_input_stream.clear();
 }
 
 void FileStream::pasteTextClip( std::string &text )
@@ -147,6 +141,7 @@ void FileStream::cyclePaste()
 
     if ( copy_text_input_stream.tellg() == -1 ) 
     {
+        // Clear state in order to continue io operations
         copy_text_input_stream.clear();
         copy_text_input_stream.seekg( 0 );
     }
