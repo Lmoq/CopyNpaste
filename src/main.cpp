@@ -1,64 +1,35 @@
 #define _MAIN_SRC_
 #include <iostream>
+#include <thread>
 #include <main.h>
 #include <hotkey.h>
 #include <callback.h>
 
-
-static HHOOK hook;
-static KBDLLHOOKSTRUCT *kbd;
-
-static Hotkey HotKey;
 static std::string text = "";
+
+static BOOL running = TRUE;
+static DWORD threadID;
+
+static std::thread keythread;
+static HWND hWnd;
 
 int main()
 {
-    INIT_HOTKEY( HotKey );
-    FileStream::loadFiles( "data/saved.txt", "data/copy.txt" );
+    FileStream::loadFiles( "copynsave/saved.txt", "copynsave/copy.txt" );
 
-    hook = SetWindowsHookEx( WH_KEYBOARD_LL, &LowLevelKeyboardProc, NULL, 0 );
-    if ( !hook ) {
-        std::cout << "Hook failed\n";
-        return 1;
-    }
+    Hotkey::add_hotkey( {VK_LCONTROL, 0x43}, postSaveMessage       , NULL, FALSE );
+    Hotkey::add_hotkey( {VK_LCONTROL, 0x56}, FileStream::cyclePaste, NULL, FALSE );
+    Hotkey::add_hotkey( {VK_F10}           , Hotkey::terminate     , NULL, TRUE );
 
-    MSG msg;
-    while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
-    {
-        TranslateMessage( &msg );
-        DispatchMessage( &msg );
+    Hotkey::run();
+    Hotkey::wait();
 
-        if ( msg.message == WM_SAVECLIP ) {
-            Sleep( 10 );
-            text = FileStream::getClipText();
-            FileStream::saveText( text );
-        }
-    }
-    UnhookWindowsHookEx( hook );
-    std::cout << "Exited Normally\n";
+    std::string text = "Eof mainfunc";
+    FileStream::saveText( text );
     return 0;
 }
 
-LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
-{
-    if ( nCode == HC_ACTION ) {
-        kbd = reinterpret_cast<KBDLLHOOKSTRUCT *>( lParam );
 
-        switch ( wParam ) {
-            case WM_KEYDOWN:
-                if ( kbd->vkCode == VK_RSHIFT ) {
-                    PostQuitMessage( 0 );
-                }
-                HotKey.keydown( kbd->vkCode );
-                break;
 
-            case WM_KEYUP:
-                HotKey.keyup( kbd->vkCode );
-                break;
-            
-            default:
-                break;
-        }
-    }
-    return CallNextHookEx( NULL, nCode, wParam, lParam );
-} 
+
+

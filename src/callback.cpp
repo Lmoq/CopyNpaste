@@ -11,6 +11,7 @@ std::ofstream FileStream::save_text_output_stream;
 std::ifstream FileStream::save_text_input_stream;
 std::ifstream FileStream::copy_text_input_stream;
 
+DWORD FileStream::threadID;
 
 void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
 {

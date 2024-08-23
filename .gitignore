@@ -1,6 +1,10 @@
 .vscode
 build
 data
+bin
+copynsave
 
+Makefile
 *.exe
-b.bat
+*.o
+*.bat
