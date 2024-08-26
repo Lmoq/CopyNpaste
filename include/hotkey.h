@@ -114,7 +114,9 @@ class Hotkey
         {
             current_active = &hkey;
             hkey.active = TRUE;
-            hkey.on_press();
+
+            if ( hkey.on_press != NULL ) 
+                hkey.on_press();
 
             ignoreKeypress = hkey.ignoreKeypress;
         }
@@ -138,7 +140,8 @@ class Hotkey
         }
     }
 
-    inline static void terminate() {
+    inline static void terminate()
+    {
         PostThreadMessage( threadID, WM_EXIT, 0, 0 );
     }
 
@@ -174,16 +177,16 @@ class Hotkey
             NULL
         );
         if ( !hWnd ) {
-            std::cout << "Create Window failed\n";
+            MessageBoxA( NULL, "WinProc failed", "Error", MB_OK );
             return;
         }
         hook = SetWindowsHookEx( WH_KEYBOARD_LL, &KeyProc, 0, 0 );
         if ( !hook ) {
-            std::cout << "Hook failed\n";
+            MessageBoxA( NULL, "Hook failed", "Error", MB_OK );
             return;
         }
         if ( !SetConsoleCtrlHandler( &consoleHandler, TRUE ) ) {
-            std::cout << "Console Handler failed\n";
+            MessageBoxA( NULL, "Console Handler failed", "Error", MB_OK );
             return;
         }
         ShowWindow( hWnd, SW_HIDE );
@@ -191,31 +194,9 @@ class Hotkey
         msgLoop();
 
         UnhookWindowsHookEx( hook );
-        std::string text = "Unhooked";
-        FileStream::saveText( text );
     }
 
-    inline static void msgLoop()
-    {
-        MSG msg;
-        while ( GetMessage( &msg, NULL, 0,0 ) > 0 )
-        {
-            if ( msg.message == WM_EXIT ) {
-                PostQuitMessage(0);
-                std::string text = "Msg received";
-                FileStream::saveText( text );
-            }
-
-            if ( msg.message == WM_SAVECLIP ) {
-                Sleep(10);
-                std::string saveText = FileStream::getClipText();
-                FileStream::saveText( saveText );
-
-            }
-            TranslateMessage( &msg );
-            DispatchMessage( &msg );
-        }
-    }
+    static void msgLoop();
 };
 
 BOOL WINAPI consoleHandler( DWORD ctrlType )
@@ -240,10 +221,9 @@ LRESULT CALLBACK WindowProc( HWND hWnd, UINT uMsg,WPARAM wParam,LPARAM lParam )
     { 
         case WM_QUERYENDSESSION:
             Hotkey::terminate();
-            return TRUE;
+            return FALSE;
         
         case WM_ENDSESSION:
-            Hotkey::wait();
             return 0;
 
         default:
@@ -260,9 +240,6 @@ LRESULT CALLBACK KeyProc( int nCode, WPARAM wParam, LPARAM lParam )
         switch ( wParam )
         {
             case WM_KEYDOWN:
-                if ( kbd->vkCode == VK_RSHIFT ) {
-                    PostQuitMessage(0);
-                }
                 Hotkey::keydown( kbd->vkCode );
                 break;
             

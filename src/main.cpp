@@ -11,7 +11,6 @@ static BOOL running = TRUE;
 static DWORD threadID;
 
 static std::thread keythread;
-static HWND hWnd;
 
 int main()
 {
@@ -23,10 +22,26 @@ int main()
 
     Hotkey::run();
     Hotkey::wait();
-
-    std::string text = "Eof mainfunc";
-    FileStream::saveText( text );
     return 0;
+}
+
+void Hotkey::msgLoop()
+{
+    MSG msg;
+    while ( GetMessage( &msg, NULL, 0,0 ) > 0 )
+    {
+        if ( msg.message == WM_EXIT ) {
+            PostQuitMessage(0);
+        }
+        if ( msg.message == WM_SAVECLIP )
+        {
+            Sleep(10);
+            std::string saveText = FileStream::getClipText();
+            FileStream::saveText( saveText );
+        }
+        TranslateMessage( &msg );
+        DispatchMessage( &msg );
+    }
 }
 
 

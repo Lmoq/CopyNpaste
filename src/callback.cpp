@@ -15,13 +15,8 @@ DWORD FileStream::threadID;
 
 void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
 {
-    if ( !checkExistenceAndCreate( savetextFile ) ) {
-        std::cout << "SaveFile created : " << savetextFile << '\n';
-    }
-
-    if ( !checkExistenceAndCreate( copytextFile ) ) {
-        std::cout << "Copyfile created : " << copytextFile << '\n';
-    }
+    checkExistenceAndCreate( savetextFile );
+    checkExistenceAndCreate( copytextFile );
     
     save_text_output_stream.open( savetextFile, std::ios_base::app | std::ios_base::out );
     save_text_input_stream.open( savetextFile, std::ios_base::in );
