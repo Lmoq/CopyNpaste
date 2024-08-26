@@ -12,6 +12,7 @@ std::ifstream FileStream::save_text_input_stream;
 std::ifstream FileStream::copy_text_input_stream;
 
 DWORD FileStream::threadID;
+BOOL FileStream::copyPasteOn = FALSE;
 
 void FileStream::loadFiles( const char *savetextFile, const char *copytextFile )
 {
@@ -126,12 +127,14 @@ void FileStream::pasteTextClip( std::string &text )
         SetClipboardData( CF_TEXT, hglbMem );
         GlobalFree( hglbMem );
     }
-    
     CloseClipboard();
 }
 
 void FileStream::cyclePaste()
 {
+    if ( !copyPasteOn ) {
+        return;
+    }
     std::string text;
     std::getline( copy_text_input_stream, text );
 
@@ -144,14 +147,76 @@ void FileStream::cyclePaste()
     pasteTextClip( text );
 }
 
+void FileStream::toggleCopyPaste()
+{
+    copyPasteOn = !copyPasteOn;
+    std::cout << "Copy Paste " << (( copyPasteOn == TRUE ) ? "On" : "Off") << '\n';
+}
+
 void postSaveMessage()
 {
     DWORD threadId = GetCurrentThreadId();
     PostThreadMessage( threadId, WM_SAVECLIP, 0, 0 );
 }
 
-void terminate() {
-    PostQuitMessage(0);
+#include <unordered_map>
+static std::unordered_map<HWND, HWND> WindowsMap;
+
+void setTopLevel( HWND hWnd )
+{
+    CHAR winName[MAX_PATH];
+
+    if ( IsWindowVisible( hWnd ) && GetWindowTextA( hWnd, winName, MAX_PATH ) ) 
+    {
+        auto item = WindowsMap.find( hWnd );
+        if ( item != WindowsMap.end() )
+        {
+            if ( item->second == HWND_TOPMOST )
+            {
+                if ( SetWindowPos( hWnd, HWND_NOTOPMOST, 0,0,0,0, SWP_NOSIZE | SWP_NOMOVE ) )
+                {
+                    WindowsMap[ hWnd ] = HWND_NOTOPMOST;
+                    std::cout << "NOTOPMOST : [ " << winName << " ]\n";
+                }
+            }
+            else if ( item->second == HWND_NOTOPMOST )
+            {
+                if ( SetWindowPos( hWnd, HWND_TOPMOST, 0,0,0,0, SWP_NOSIZE | SWP_NOMOVE ) )
+                {
+                    WindowsMap[ hWnd ] = HWND_TOPMOST;
+                    std::cout << "TOPMOST : [ " << winName << " ]\n";
+                }
+            }
+        }
+        else
+        {
+            if ( SetWindowPos( hWnd, HWND_TOPMOST, 0,0,0,0, SWP_NOSIZE | SWP_NOMOVE ) )
+            {
+                WindowsMap[ hWnd ] = HWND_TOPMOST;
+                std::cout << "TOPMOST : [ " << winName << " ]\n";
+            }
+        }
+    }  
 }
+
+void setFGTopLevel()
+{
+    setTopLevel( GetForegroundWindow() );
+}
+
+void revertTopMost()
+{
+    CHAR winName[MAX_PATH];
+    for ( auto &item : WindowsMap )
+    {
+        if ( item.second == HWND_TOPMOST )
+        {
+            GetWindowTextA( item.first, winName, MAX_PATH );
+            SetWindowPos( item.first, HWND_NOTOPMOST, 0,0,0,0, SWP_NOSIZE | SWP_NOMOVE );
+            WindowsMap[ item.first ] = HWND_NOTOPMOST;
+        }
+    }
+}
+
 
 

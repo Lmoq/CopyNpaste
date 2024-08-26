@@ -17,17 +17,23 @@ public:
     static std::ifstream copy_text_input_stream;
 
     static DWORD threadID;
+    static BOOL copyPasteOn;
     
     static void loadFiles( const char *savetextFile, const char* copytextFile );
     static bool checkExistenceAndCreate( const char *filepath );
 
+    static void toggleCopyPaste();
+
     static std::string getClipText();
-    // Returns the current copied text from clipboard
-    static void saveText( std::string &text );\
-    // Paste string into the clipboard
+    static void saveText( std::string &text );
+
     static void pasteTextClip( std::string &text );
     static void cyclePaste();
 };
 void postSaveMessage();
+
+void setTopLevel( HWND hWnd );
+void setFGTopLevel();
+void revertTopMost();
 
 #endif

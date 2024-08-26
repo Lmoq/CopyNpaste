@@ -20,9 +20,6 @@ inline LRESULT CALLBACK KeyProc( int nCode, WPARAM wParam, LPARAM lParam );
 inline LRESULT CALLBACK WindowProc( HWND hWnd, UINT uMsg,WPARAM wParam,LPARAM lParam );
 inline BOOL WINAPI consoleHandler( DWORD ctrlType );
 
-// Adding a on_press and on_release callback
-
-
 /// Class that install hook and listen for hotkeys\n
 /// \note - This class runs independently in a separate thread that automatically 
 /// \note   terminates on system shutdown or via closing console window
@@ -31,7 +28,7 @@ inline BOOL WINAPI consoleHandler( DWORD ctrlType );
 /// \note - Usage :
 /// \note   - Populate hotkeymap with add_hotkey()
 /// \note   - Run listener with Hotkey::run() and call Hotkey::wait() at the
-/// \note     end of main thread if there are no other 
+/// \note     end of main thread if there are no other
 /// \note     thread running besides main to avoid exceptions
 /// \note   - Terminate Hotkey sample :
 /// \note       - Hotkey::add_hotkey( {VK_NUMPAD0}, Hotkey::terminate, TRUE );
@@ -140,11 +137,8 @@ class Hotkey
         }
     }
 
-    inline static void terminate()
-    {
-        PostThreadMessage( threadID, WM_EXIT, 0, 0 );
-    }
-
+    static void terminate();
+    
     inline static void run() {
         thread_ = std::thread( keyhook );
     }
@@ -191,8 +185,8 @@ class Hotkey
         }
         ShowWindow( hWnd, SW_HIDE );
         threadID = GetCurrentThreadId();
+        
         msgLoop();
-
         UnhookWindowsHookEx( hook );
     }
 
@@ -224,6 +218,7 @@ LRESULT CALLBACK WindowProc( HWND hWnd, UINT uMsg,WPARAM wParam,LPARAM lParam )
             return FALSE;
         
         case WM_ENDSESSION:
+            Hotkey::wait();
             return 0;
 
         default:
