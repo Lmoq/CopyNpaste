@@ -1,6 +1,7 @@
 #include <iostream>
 #include <callback.h>
 #include <algorithm>
+#include <string>
 #include <filesystem>
 
 namespace fs = std::filesystem;

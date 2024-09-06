@@ -49,6 +49,7 @@ class Hotkey
     inline static DWORD prime = 199;
 
     inline static BOOL ignoreKeypress = FALSE;
+    inline static BOOL INIT_FAILED = FALSE;
 
     inline static std::thread thread_;
     inline static DWORD threadID;
@@ -160,7 +161,7 @@ class Hotkey
         RegisterClassA( &wc );
 
         hWnd = CreateWindowExA( 
-            0, wc.lpszClassName, "Winproc", 0, 
+            0, wc.lpszClassName, "Winproc", WS_CHILD, 
             CW_USEDEFAULT, 
             CW_USEDEFAULT, 
             CW_USEDEFAULT, 
@@ -172,24 +173,26 @@ class Hotkey
         );
         if ( !hWnd ) {
             MessageBoxA( NULL, "WinProc failed", "Error", MB_OK );
-            return;
+            INIT_FAILED = TRUE;
         }
         hook = SetWindowsHookEx( WH_KEYBOARD_LL, &KeyProc, 0, 0 );
         if ( !hook ) {
             MessageBoxA( NULL, "Hook failed", "Error", MB_OK );
-            return;
+            INIT_FAILED = TRUE;
         }
         if ( !SetConsoleCtrlHandler( &consoleHandler, TRUE ) ) {
             MessageBoxA( NULL, "Console Handler failed", "Error", MB_OK );
-            return;
+            INIT_FAILED = TRUE;
         }
-        ShowWindow( hWnd, SW_HIDE );
         threadID = GetCurrentThreadId();
-        
-        msgLoop();
+
+        if ( !INIT_FAILED )
+        {
+            ShowWindow( hWnd, SW_HIDE );
+            msgLoop();
+        }
         UnhookWindowsHookEx( hook );
     }
-
     static void msgLoop();
 };
 

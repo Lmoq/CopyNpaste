@@ -15,6 +15,7 @@ int main()
 {
     FileStream::loadFiles( "copynsave/saved.txt", "copynsave/copy.txt" );
     std::cout << "\nToggle copypaste with ( ctrl + F9 )\n"
+              << "Terminate app with ( ctrl + F10 )\n"
               << "Pressing copy ( ctrl + c ), text will be saved into copynpaste/saved.txt\n"
               << "Pressing paste ( ctrl + v / shift + insert ) will paste each lines inside copynpaste/copy.txt\n\n"
               << "To toggle a window to Top Most Level, press console key ( OEM_3 ) / ( ~ )\n\n";
@@ -34,6 +35,7 @@ int main()
 
     Hotkey::run();
     Hotkey::wait();
+    printf("EOF\n");
     return 0;
 }
 
